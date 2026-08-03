@@ -457,7 +457,7 @@ export default function DailyReport() {
 
             {/* Funil do mês — sempre visível para acompanhamento */}
             <CompactFunnel
-              title="Funil do mês — acumulado"
+              title={`Funil do mês — acumulado (${format(viewMonth, "MMMM yyyy", { locale: ptBR })})`}
               subtitle="metas: 100 → 10% → 40% → 50%"
               accent="hsl(280 90% 65%)"
               steps={[
