@@ -10,7 +10,7 @@ import { Swords, Shield, Flame, Trophy, Sparkles, Lock, Loader2, Info, AlertTria
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { format, startOfMonth, eachDayOfInterval, isAfter, isWeekend, parseISO, subDays } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth, eachDayOfInterval, isAfter, isWeekend, parseISO, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import logoWhite from "@/assets/logo-faceimob-white.png";
