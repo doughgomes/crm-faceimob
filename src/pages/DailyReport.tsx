@@ -138,11 +138,11 @@ export default function DailyReport() {
 
 
 
-  const loadMonth = async (tid: string) => {
+  const loadMonth = async (tid: string, monthRef?: Date) => {
     setLoadingMonth(true);
-    const today = new Date();
-    const yest = subDays(today, 1);
-    const { data, error } = await supabase.rpc("get_daily_team_month_summary" as any, { _team_id: tid });
+    const ref = startOfMonth(monthRef ?? viewMonth);
+    const yest = subDays(new Date(), 1);
+    const { data, error } = await supabase.rpc("get_daily_team_month_summary" as any, { _team_id: tid, _month: format(ref, "yyyy-MM-dd") });
     let mt: Record<FieldKey, number> = FIELDS.reduce((a, f) => ({ ...a, [f.key]: 0 }), {} as Record<FieldKey, number>);
     let filledDates: string[] = [];
     if (!error && data) {
@@ -153,15 +153,14 @@ export default function DailyReport() {
     setMonthTotals(mt);
     setFilledDates(filledDates);
     const filledSet = new Set(filledDates);
-    const days = eachDayOfInterval({ start: startOfMonth(today), end: yest });
-    const missing = days
-      .filter(d => !isAfter(d, yest))
+    const rangeEnd = isAfter(endOfMonth(ref), yest) ? yest : endOfMonth(ref);
+    const missing = (isAfter(startOfMonth(ref), yest) ? [] : eachDayOfInterval({ start: startOfMonth(ref), end: rangeEnd }))
       .map(d => format(d, "yyyy-MM-dd"))
       .filter(d => !filledSet.has(d));
     setMissingDays(missing);
 
     // Per-broker month totals (hidden by default, revealed by button)
-    const { data: bData } = await supabase.rpc("get_daily_team_broker_month_summary" as any, { _team_id: tid });
+    const { data: bData } = await supabase.rpc("get_daily_team_broker_month_summary" as any, { _team_id: tid, _month: format(ref, "yyyy-MM-dd") });
     const map: Record<string, Record<FieldKey, number> & { days_filled?: number }> = {};
     const rows = ((bData as any)?.rows ?? []) as any[];
     rows.forEach((r) => {
