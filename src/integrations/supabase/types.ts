@@ -1789,11 +1789,11 @@ export type Database = {
         }[]
       }
       get_daily_team_broker_month_summary: {
-        Args: { _team_id: string }
+        Args: { _month?: string; _team_id: string }
         Returns: Json
       }
       get_daily_team_month_summary: {
-        Args: { _team_id: string }
+        Args: { _month?: string; _team_id: string }
         Returns: Json
       }
       get_daily_team_report: {
