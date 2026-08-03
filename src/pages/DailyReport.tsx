@@ -10,7 +10,7 @@ import { Swords, Shield, Flame, Trophy, Sparkles, Lock, Loader2, Info, AlertTria
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { format, startOfMonth, eachDayOfInterval, isAfter, isWeekend, parseISO, subDays } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth, eachDayOfInterval, isAfter, isWeekend, parseISO, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import logoWhite from "@/assets/logo-faceimob-white.png";
@@ -71,6 +71,7 @@ export default function DailyReport() {
   const [pendingRemove, setPendingRemove] = useState<Roster | null>(null);
   const [brokerMonth, setBrokerMonth] = useState<Record<string, Record<FieldKey, number> & { days_filled?: number }>>({});
   const [expandedBroker, setExpandedBroker] = useState<Record<string, boolean>>({});
+  const [viewMonth, setViewMonth] = useState<Date>(startOfMonth(new Date()));
 
 
   const yesterday = subDays(new Date(), 1);
@@ -137,11 +138,11 @@ export default function DailyReport() {
 
 
 
-  const loadMonth = async (tid: string) => {
+  const loadMonth = async (tid: string, monthRef?: Date) => {
     setLoadingMonth(true);
-    const today = new Date();
-    const yest = subDays(today, 1);
-    const { data, error } = await supabase.rpc("get_daily_team_month_summary" as any, { _team_id: tid });
+    const ref = startOfMonth(monthRef ?? viewMonth);
+    const yest = subDays(new Date(), 1);
+    const { data, error } = await supabase.rpc("get_daily_team_month_summary" as any, { _team_id: tid, _month: format(ref, "yyyy-MM-dd") });
     let mt: Record<FieldKey, number> = FIELDS.reduce((a, f) => ({ ...a, [f.key]: 0 }), {} as Record<FieldKey, number>);
     let filledDates: string[] = [];
     if (!error && data) {
@@ -152,15 +153,14 @@ export default function DailyReport() {
     setMonthTotals(mt);
     setFilledDates(filledDates);
     const filledSet = new Set(filledDates);
-    const days = eachDayOfInterval({ start: startOfMonth(today), end: yest });
-    const missing = days
-      .filter(d => !isAfter(d, yest))
+    const rangeEnd = isAfter(endOfMonth(ref), yest) ? yest : endOfMonth(ref);
+    const missing = (isAfter(startOfMonth(ref), yest) ? [] : eachDayOfInterval({ start: startOfMonth(ref), end: rangeEnd }))
       .map(d => format(d, "yyyy-MM-dd"))
       .filter(d => !filledSet.has(d));
     setMissingDays(missing);
 
     // Per-broker month totals (hidden by default, revealed by button)
-    const { data: bData } = await supabase.rpc("get_daily_team_broker_month_summary" as any, { _team_id: tid });
+    const { data: bData } = await supabase.rpc("get_daily_team_broker_month_summary" as any, { _team_id: tid, _month: format(ref, "yyyy-MM-dd") });
     const map: Record<string, Record<FieldKey, number> & { days_filled?: number }> = {};
     const rows = ((bData as any)?.rows ?? []) as any[];
     rows.forEach((r) => {
@@ -457,7 +457,7 @@ export default function DailyReport() {
 
             {/* Funil do mês — sempre visível para acompanhamento */}
             <CompactFunnel
-              title="Funil do mês — acumulado"
+              title={`Funil do mês — acumulado (${format(viewMonth, "MMMM yyyy", { locale: ptBR })})`}
               subtitle="metas: 100 → 10% → 40% → 50%"
               accent="hsl(280 90% 65%)"
               steps={[
@@ -545,11 +545,37 @@ export default function DailyReport() {
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-cyan-400" /> Funil do mês ({format(new Date(), "MMMM", { locale: ptBR })})
+                    <TrendingUp className="h-4 w-4 text-cyan-400" /> Funil do mês ({format(viewMonth, "MMMM yyyy", { locale: ptBR })})
                   </CardTitle>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Período considerado: segunda a domingo</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 mr-1">
+                    <Button
+                      size="sm" variant="outline" className="h-7 w-7 p-0"
+                      title="Mês anterior"
+                      onClick={() => {
+                        const m = subMonths(viewMonth, 1);
+                        setViewMonth(m);
+                        if (resolvedTeamId) loadMonth(resolvedTeamId, m);
+                      }}
+                      disabled={loadingMonth}
+                    >‹</Button>
+                    <span className="text-[11px] font-semibold px-1 min-w-[68px] text-center capitalize">
+                      {format(viewMonth, "MMM/yy", { locale: ptBR })}
+                    </span>
+                    <Button
+                      size="sm" variant="outline" className="h-7 w-7 p-0"
+                      title="Mês seguinte"
+                      onClick={() => {
+                        const m = addMonths(viewMonth, 1);
+                        if (isAfter(startOfMonth(m), startOfMonth(new Date()))) return;
+                        setViewMonth(m);
+                        if (resolvedTeamId) loadMonth(resolvedTeamId, m);
+                      }}
+                      disabled={loadingMonth || isSameMonth(viewMonth, new Date())}
+                    >›</Button>
+                  </div>
                   <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
                     <DialogTrigger asChild>
                       <Button size="sm" variant="outline" className="h-7 text-xs">
@@ -559,16 +585,35 @@ export default function DailyReport() {
                     <DialogContent className="max-w-lg">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-base">
-                          <History className="h-4 w-4" /> Histórico do mês
+                          <History className="h-4 w-4" /> Histórico — <span className="capitalize">{format(viewMonth, "MMMM yyyy", { locale: ptBR })}</span>
                         </DialogTitle>
                       </DialogHeader>
                       <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <Button
+                            size="sm" variant="outline" className="h-7 text-xs"
+                            onClick={() => { const m = subMonths(viewMonth, 1); setViewMonth(m); if (resolvedTeamId) loadMonth(resolvedTeamId, m); }}
+                            disabled={loadingMonth}
+                          >‹ Mês anterior</Button>
+                          <span className="text-xs font-semibold capitalize">{format(viewMonth, "MMMM yyyy", { locale: ptBR })}</span>
+                          <Button
+                            size="sm" variant="outline" className="h-7 text-xs"
+                            onClick={() => { const m = addMonths(viewMonth, 1); if (isAfter(startOfMonth(m), startOfMonth(new Date()))) return; setViewMonth(m); if (resolvedTeamId) loadMonth(resolvedTeamId, m); }}
+                            disabled={loadingMonth || isSameMonth(viewMonth, new Date())}
+                          >Mês seguinte ›</Button>
+                        </div>
                         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Preenchido</span>
                           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-rose-500" /> Não preenchido</span>
                         </div>
                         <div className="grid grid-cols-7 gap-1.5">
-                          {eachDayOfInterval({ start: startOfMonth(new Date()), end: yesterday }).map((d) => {
+                          {(isAfter(startOfMonth(viewMonth), yesterday)
+                            ? []
+                            : eachDayOfInterval({
+                                start: startOfMonth(viewMonth),
+                                end: isAfter(endOfMonth(viewMonth), yesterday) ? yesterday : endOfMonth(viewMonth),
+                              })
+                          ).map((d) => {
                             const ds = format(d, "yyyy-MM-dd");
                             const done = filledDates.includes(ds);
                             return (
@@ -590,6 +635,7 @@ export default function DailyReport() {
                             );
                           })}
                         </div>
+
                         {loadingDay && <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Carregando…</p>}
                       </div>
                     </DialogContent>
