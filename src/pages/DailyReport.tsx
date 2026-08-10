@@ -364,7 +364,7 @@ export default function DailyReport() {
 
   if (!identifier) return (
     <div className="p-8 text-center text-rose-400 font-bold bg-[#0F0E19] min-h-screen flex flex-col items-center justify-center space-y-4">
-      <div>Saia da edição visual e va para o modo builder</div>
+      <div>Ajuste a inserção de novos corretores no checkpoint diario e tambem o desligamento, não esta funcional.</div>
       <div>Não estamos conseguindo adicionar corretores no checkpoint. Ajuste</div>
     </div>
   );
