@@ -362,7 +362,7 @@ export default function DailyReport() {
     if (resolvedTeamId) loadMonth(resolvedTeamId);
   };
 
-  if (!identifier) return <div className="p-8 text-center">Equipe inválida.</div>;
+  if (!identifier) return <div className="p-8 text-center text-rose-400 font-bold bg-[#0F0E19] min-h-screen flex items-center justify-center">Não estamos conseguindo adicionar corretores no checkpoint. Ajuste</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0E19] via-[#12122a] to-[#0F0E19] text-foreground">
