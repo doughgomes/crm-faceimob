@@ -83,6 +83,31 @@ export default function DailyReport() {
   const reloadRoster = async (tid: string, rawPin: string) => {
     const hash = await sha256(rawPin);
     const { data, error } = await supabase.rpc("daily_roster_list" as any, { _team_id: tid, _pin_hash: hash });
+    
+    // Se falhar (ex: PIN inválido), tenta novamente sem o hash se for ADMIN logado
+    if (error && isAdminView) {
+      const { data: adminData } = await supabase.rpc("get_team_roster" as any, { _team_id: tid });
+      if (adminData) {
+        const base = (adminData as any[]) as Roster[];
+        const { data: overrides } = await supabase
+          .from("daily_team_roster" as any)
+          .select("broker_id, broker_name, active, is_custom")
+          .eq("team_id", tid);
+        const ov = ((overrides as any) ?? []) as any[];
+        const ovMap = new Map(ov.filter((o) => !o.is_custom).map((o) => [o.broker_id, o]));
+        const merged: Roster[] = base.map((b) => {
+          const o = ovMap.get(b.broker_id);
+          return { ...b, active: o ? o.active : true, is_custom: false } as any;
+        });
+        ov.filter((o) => o.is_custom).forEach((o) => {
+          merged.push({ broker_id: o.broker_id, broker_name: o.broker_name, active: o.active, is_custom: true } as any);
+        });
+        merged.sort((a: any, b: any) => (Number(b.active !== false) - Number(a.active !== false)) || a.broker_name.localeCompare(b.broker_name));
+        setRoster(merged);
+        return merged;
+      }
+    }
+
     if (error) return null;
     const list = ((data as any) ?? []) as Roster[];
     setRoster(list);
@@ -97,30 +122,61 @@ export default function DailyReport() {
   };
 
   const addBroker = async () => {
-    if (!resolvedTeamId || !pin || !newBrokerName.trim()) return;
+    if (!resolvedTeamId || (!pin && !isAdminView) || !newBrokerName.trim()) return;
     setRosterBusy(true);
-    const hash = await sha256(pin);
-    const { error } = await supabase.rpc("daily_roster_add" as any, { _team_id: resolvedTeamId, _pin_hash: hash, _broker_name: newBrokerName.trim() });
-    setRosterBusy(false);
-    if (error) return toast({ title: "Erro ao adicionar", description: error.message, variant: "destructive" });
-    setNewBrokerName("");
-    toast({ title: "Corretor adicionado" });
-    await reloadRoster(resolvedTeamId, pin);
+    
+    try {
+      if (isAdminView) {
+        // Admin bypass: insere direto via Supabase Client se for admin
+        const v_id = crypto.randomUUID();
+        const { error } = await supabase.from("daily_team_roster" as any).insert({
+          team_id: resolvedTeamId,
+          broker_id: v_id,
+          broker_name: newBrokerName.trim(),
+          is_custom: true,
+          active: true
+        });
+        if (error) throw error;
+      } else {
+        const hash = await sha256(pin);
+        const { error } = await supabase.rpc("daily_roster_add" as any, { _team_id: resolvedTeamId, _pin_hash: hash, _broker_name: newBrokerName.trim() });
+        if (error) throw error;
+      }
+      
+      setNewBrokerName("");
+      toast({ title: "Corretor adicionado" });
+      await reloadRoster(resolvedTeamId, pin);
+    } catch (error: any) {
+      toast({ title: "Erro ao adicionar", description: error.message, variant: "destructive" });
+    } finally {
+      setRosterBusy(false);
+    }
   };
 
   const confirmRemoveBroker = async () => {
     const target = pendingRemove;
-    if (!target || !resolvedTeamId || !pin) return;
+    if (!target || !resolvedTeamId || (!pin && !isAdminView)) return;
     setRosterBusy(true);
     try {
-      const hash = await sha256(pin);
-      const { error } = await supabase.rpc("daily_roster_remove" as any, { _team_id: resolvedTeamId, _pin_hash: hash, _broker_id: target.broker_id });
-      if (error) {
-        toast({ title: "Erro ao desligar", description: error.message, variant: "destructive" });
+      if (isAdminView) {
+        // Admin bypass: remove (desativa) direto via Client
+        const { error } = await supabase.from("daily_team_roster" as any).upsert({
+          team_id: resolvedTeamId,
+          broker_id: target.broker_id,
+          broker_name: target.broker_name,
+          is_custom: target.is_custom || false,
+          active: false,
+          inactivated_at: new Date().toISOString()
+        }, { onConflict: 'team_id,broker_id' });
+        if (error) throw error;
       } else {
-        toast({ title: "Corretor desligado" });
-        await reloadRoster(resolvedTeamId, pin);
+        const hash = await sha256(pin);
+        const { error } = await supabase.rpc("daily_roster_remove" as any, { _team_id: resolvedTeamId, _pin_hash: hash, _broker_id: target.broker_id });
+        if (error) throw error;
       }
+      
+      toast({ title: "Corretor desligado" });
+      await reloadRoster(resolvedTeamId, pin);
     } catch (e: any) {
       toast({ title: "Erro ao desligar", description: e?.message || "Erro inesperado", variant: "destructive" });
     } finally {
