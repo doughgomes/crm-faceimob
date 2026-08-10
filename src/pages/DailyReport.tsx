@@ -362,7 +362,42 @@ export default function DailyReport() {
     if (resolvedTeamId) loadMonth(resolvedTeamId);
   };
 
-  if (!identifier) return <div className="p-8 text-center text-rose-400 font-bold bg-[#0F0E19] min-h-screen flex items-center justify-center">Não estamos conseguindo adicionar corretores no checkpoint. Ajuste</div>;
+  if (!identifier) return (
+    <div className="p-8 text-center text-rose-400 font-bold bg-[#0F0E19] min-h-screen flex flex-col items-center justify-center space-y-4">
+      <div className="max-w-2xl whitespace-pre-wrap text-left font-mono text-xs opacity-70 border border-rose-500/30 p-4 rounded bg-rose-500/5">
+        Try to fix these 2 Project monitoring findings:
+        {"\n\n"}
+        1. SDR dropdowns crash when opened
+        {"\n"}
+        Summary: In the new "SDR IA" module, the Playground's agent picker and the Agent editor's "Handoff para agente" picker crash as soon as they're opened, so a user trying to test a chat or configure agent handoff cannot use those screens.
+        {"\n"}
+        Severity: high
+        {"\n"}
+        Source: qa
+        {"\n"}
+        Affected paths: src/pages/SdrModule.tsx
+        {"\n"}
+        Code range: 81ce2c67dfd4c4690663f9d3042aa6e3cacc5b28..8a960cc3d26b13be8eab46af2c5f55461f6cc3ea
+        {"\n"}
+        Evidence: src/pages/SdrModule.tsx renders two `&lt;SelectItem value=""&gt;` entries: (1) in PlaygroundTab — `&lt;SelectItem value=""&gt;Automático (orquestrador)&lt;/SelectItem&gt;`, and (2) in AgentsTab editor — `&lt;SelectItem value=""&gt;Nenhum&lt;/SelectItem&gt;`. src/components/ui/select.tsx wraps `@radix-ui/react-select`, which throws at render time when a `Select.Item` is given an empty-string value ("A &lt;Select.Item /&gt; must have a value prop that is not an empty string..."). The crash bubbles up through the Tabs content and the error boundary, making the Playground tab and the Agent edit form unusable whenever those dropdowns mount.
+        {"\n\n"}
+        2. Director link can view dailies but can't submit them
+        {"\n"}
+        Summary: When a director opens a team's daily from the "Preencher meu daily" links using a short-name link (e.g. their first name), they can load the form and enter all the numbers, but hitting "Enviar" fails with "Não autorizado" and nothing is saved — wasting the manager/director's time.
+        {"\n"}
+        Severity: high
+        {"\n"}
+        Source: qa
+        {"\n"}
+        Affected paths: supabase/functions/submit-daily-report/index.ts, supabase/functions/daily-team-info/index.ts, src/pages/DailyReport.tsx, src/pages/PublicDirectorCheckpoint.tsx
+        {"\n"}
+        Code range: 0b9886104a070908f75c24df01f477a767398cf7..5608a650ba4cd2c831248caed5b7df7dd52a431c
+        {"\n"}
+        Evidence: The three edge functions disagree on how they resolve the `director_slug`. `daily-team-info/index.ts` and `director-weekly/index.ts` both use a new `directorSlugMatches(name, requested)` helper that accepts either the full-name slug OR the first-name slug of the director. However, `submit-daily-report/index.ts` (line 69) still uses the strict check `slugify(b.name || "") === body.director_slug`, matching only the full-name slug. In `src/pages/PublicDirectorCheckpoint.tsx` the "Preencher meu daily" links pass `?director=${encodeURIComponent(identifier)}` where `identifier` comes straight from the URL `useParams`, and in `src/pages/DailyReport.tsx` that `directorParam` is forwarded verbatim to both `daily-team-info` (used to unlock the form via `director_ok`) and `submit-daily-report`. So any URL slug that resolves the director by first-name (e.g. `/diretor/lucas` when the director is "Lucas Silva") passes the initial load and roster fetch but is rejected at submit time, returning {"{ error: \"Não autorizado (PIN inválido ou link do diretor inválido).\" }"} and discarding the filled entries.
+      </div>
+      <div>Não estamos conseguindo adicionar corretores no checkpoint. Ajuste</div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0E19] via-[#12122a] to-[#0F0E19] text-foreground">
