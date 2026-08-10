@@ -30,7 +30,13 @@ const BodySchema = z.object({
 
 function slugify(s: string) {
   return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+function directorSlugMatches(name: string, requested: string) {
+  const normalized = slugify(requested);
+  if (!normalized) return false;
+  const full = slugify(name || "");
+  const first = slugify((name || "").split(/\s+/)[0] || "");
+  return full === normalized || first === normalized;
 }
 
 async function sha256(input: string): Promise<string> {
@@ -66,7 +72,7 @@ Deno.serve(async (req) => {
     }
     if (!authorized && body.director_slug) {
       const { data: dirs } = await supabase.from("brokers").select("id, name, active, role").eq("role", "director");
-      const dir = (dirs || []).find((b: any) => b.active !== false && slugify(b.name || "") === body.director_slug);
+      const dir = (dirs || []).find((b: any) => b.active !== false && directorSlugMatches(b.name || "", body.director_slug!));
       if (dir) {
         const { data: mgrs } = await supabase.from("brokers").select("id").eq("director_id", dir.id);
         const scopeIds = new Set<string>([dir.id, ...((mgrs || []).map((m: any) => m.id))]);

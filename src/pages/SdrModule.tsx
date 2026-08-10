@@ -196,10 +196,10 @@ function AgentsTab({ agents, reload }: { agents: Agent[]; reload: () => void }) 
             </div>
             <div>
               <Label>Handoff para agente</Label>
-              <Select value={editing.handoff_to_agent_id || ""} onValueChange={v => setEditing({ ...editing, handoff_to_agent_id: v || null })}>
+              <Select value={editing.handoff_to_agent_id || "none"} onValueChange={v => setEditing({ ...editing, handoff_to_agent_id: v === "none" ? null : v })}>
                 <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {agents.filter(a => a.id !== editing.id).map(a => (
                     <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                   ))}
@@ -291,10 +291,10 @@ function PlaygroundTab({ agents }: { agents: Agent[] }) {
   return (
     <Card className="p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <Select value={agentId} onValueChange={setAgentId}>
+        <Select value={agentId || "auto"} onValueChange={v => setAgentId(v === "auto" ? "" : v)}>
           <SelectTrigger className="w-64"><SelectValue placeholder="Agente inicial (ou orquestrador automático)" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Automático (orquestrador)</SelectItem>
+            <SelectItem value="auto">Automático (orquestrador)</SelectItem>
             {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
           </SelectContent>
         </Select>
