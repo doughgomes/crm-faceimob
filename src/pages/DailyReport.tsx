@@ -401,10 +401,15 @@ export default function DailyReport() {
     }
     setSubmitting(true);
     const payload: any = {
-      team_id: resolvedTeamId, pin: pin || undefined, report_date: date, filled_by_name: filledBy, notes: notes || null,
+      team_id: resolvedTeamId,
+      pin: pin || undefined,
+      report_date: date,
+      filled_by_name: filledBy,
+      notes: notes || null,
       entries: roster.map((b) => ({ broker_id: b.broker_id, broker_name: b.broker_name, ...entries[b.broker_id] })).filter((e) => e.broker_id),
     };
     if (directorParam) payload.director_slug = directorParam;
+
 
 
     const { data, error } = await supabase.functions.invoke("submit-daily-report", { body: payload });
@@ -420,8 +425,8 @@ export default function DailyReport() {
 
   if (!identifier) return (
     <div className="p-8 text-center text-rose-400 font-bold bg-[#0F0E19] min-h-screen flex flex-col items-center justify-center space-y-4">
-      <div>Ajuste a inserção de novos corretores no checkpoint diario e tambem o desligamento, não esta funcional.</div>
-      <div>Não estamos conseguindo adicionar corretores no checkpoint. Ajuste</div>
+      <div>Permita que os diretores adicionem e desliguem corretores do checkpoint, essa permissão se estende a mim e aos gerentes e corrija o erro ao salvar o checkpoint</div>
+
     </div>
   );
 
