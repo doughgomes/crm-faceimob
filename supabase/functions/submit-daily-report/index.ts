@@ -30,6 +30,7 @@ const BodySchema = z.object({
 
 function slugify(s: string) {
   return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/^equipe\s+/i, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 function directorSlugMatches(name: string, requested: string) {
   const normalized = slugify(requested);
