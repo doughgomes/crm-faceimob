@@ -199,7 +199,7 @@ export default function Checkin() {
             </div>
             <DialogTitle className="text-center">Check-in confirmado! ✅</DialogTitle>
             <DialogDescription className="text-center text-sm leading-relaxed pt-2">
-              Load the security issues from the scan results and fix the selected issues.
+              Boa! Agora é atacar cada lead como se fosse o próximo contrato assinado. 🚀
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-center">
