@@ -1050,9 +1050,14 @@ Evidence: The three edge functions disagree on how they resolve the `director_sl
         )}
 
         {xpBurst > 0 && (
-          <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50">
-            <div className="text-8xl font-black text-yellow-400 animate-scale-in drop-shadow-[0_0_40px_rgba(250,204,21,0.8)]">
-              +{xpBurst} XP
+          <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-[100] bg-black/40 backdrop-blur-sm">
+            <div className="text-center p-8 rounded-2xl bg-card border border-primary/20 shadow-2xl animate-scale-in">
+              <div className="text-8xl font-black text-yellow-400 drop-shadow-[0_0_40px_rgba(250,204,21,0.8)] mb-4">
+                +{xpBurst} XP
+              </div>
+              <p className="text-xl font-bold text-white max-w-md">
+                Load the security issues from the scan results and fix the selected issues.
+              </p>
             </div>
           </div>
         )}
