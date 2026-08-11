@@ -70,6 +70,9 @@ Deno.serve(async (req) => {
         authorized = true;
       }
     }
+
+    // New: If not authorized by PIN, try Director slug bypass
+
     if (!authorized && body.director_slug) {
       const { data: dirs } = await supabase.from("brokers").select("id, name, active, role").eq("role", "director");
       const dir = (dirs || []).find((b: any) => b.active !== false && directorSlugMatches(b.name || "", body.director_slug!));
