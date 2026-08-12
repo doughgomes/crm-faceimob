@@ -132,7 +132,7 @@ export default function DailyReport() {
       if (isAdminView) {
         // Admin bypass: insere direto via Supabase Client se for admin
         const v_id = crypto.randomUUID();
-        const { error } = await supabase.from("daily_team_roster" as any).insert({
+        const { error } = await supabase.from("daily_team_roster").insert({
           team_id: resolvedTeamId,
           broker_id: v_id,
           broker_name: newBrokerName.trim(),
