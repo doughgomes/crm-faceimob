@@ -171,7 +171,7 @@ export default function DailyReport() {
     try {
       if (isAdminView) {
         // Admin bypass: remove (desativa) direto via Client
-        const { error } = await supabase.from("daily_team_roster" as any).upsert({
+        const { error } = await supabase.from("daily_team_roster").upsert({
           team_id: resolvedTeamId,
           broker_id: target.broker_id,
           broker_name: target.broker_name,
@@ -185,7 +185,8 @@ export default function DailyReport() {
         const body: any = { 
           action: "set_active", 
           broker_id: target.broker_id,
-          active: false
+          active: false,
+          broker_name: target.broker_name
         };
         if (resolvedTeamId) body.team_id = resolvedTeamId;
         if (directorParam) body.director_slug = directorParam;
