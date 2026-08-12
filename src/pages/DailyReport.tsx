@@ -87,13 +87,13 @@ export default function DailyReport() {
 
     const { data, error } = await supabase.functions.invoke("daily-team-info", { body });
     
-    // Se falhar (ex: PIN inválido), tenta novamente sem o hash se for ADMIN logado
-    if (error && isAdminView) {
+    // Se falhar (ex: PIN inválido), tenta novamente via RLS se for ADMIN logado
+    if ((error || (data as any)?.error) && isAdminView) {
       const { data: adminData } = await supabase.rpc("get_team_roster" as any, { _team_id: tid });
       if (adminData) {
         const base = (adminData as any[]) as Roster[];
         const { data: overrides } = await supabase
-          .from("daily_team_roster" as any)
+          .from("daily_team_roster")
           .select("broker_id, broker_name, active, is_custom")
           .eq("team_id", tid);
         const ov = ((overrides as any) ?? []) as any[];
@@ -132,7 +132,7 @@ export default function DailyReport() {
       if (isAdminView) {
         // Admin bypass: insere direto via Supabase Client se for admin
         const v_id = crypto.randomUUID();
-        const { error } = await supabase.from("daily_team_roster" as any).insert({
+        const { error } = await supabase.from("daily_team_roster").insert({
           team_id: resolvedTeamId,
           broker_id: v_id,
           broker_name: newBrokerName.trim(),
@@ -171,7 +171,7 @@ export default function DailyReport() {
     try {
       if (isAdminView) {
         // Admin bypass: remove (desativa) direto via Client
-        const { error } = await supabase.from("daily_team_roster" as any).upsert({
+        const { error } = await supabase.from("daily_team_roster").upsert({
           team_id: resolvedTeamId,
           broker_id: target.broker_id,
           broker_name: target.broker_name,
@@ -185,7 +185,8 @@ export default function DailyReport() {
         const body: any = { 
           action: "set_active", 
           broker_id: target.broker_id,
-          active: false
+          active: false,
+          broker_name: target.broker_name
         };
         if (resolvedTeamId) body.team_id = resolvedTeamId;
         if (directorParam) body.director_slug = directorParam;
@@ -327,7 +328,7 @@ export default function DailyReport() {
               const base = ((rosterRows as any) ?? []) as Roster[];
               // Admin: merge overrides from daily_team_roster (inactivations + custom brokers)
               const { data: overrides } = await supabase
-                .from("daily_team_roster" as any)
+                .from("daily_team_roster")
                 .select("broker_id, broker_name, active, is_custom")
                 .eq("team_id", tid);
               const ov = ((overrides as any) ?? []) as Array<{ broker_id: string; broker_name: string; active: boolean; is_custom: boolean }>;
