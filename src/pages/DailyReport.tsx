@@ -328,7 +328,7 @@ export default function DailyReport() {
               const base = ((rosterRows as any) ?? []) as Roster[];
               // Admin: merge overrides from daily_team_roster (inactivations + custom brokers)
               const { data: overrides } = await supabase
-                .from("daily_team_roster" as any)
+                .from("daily_team_roster")
                 .select("broker_id, broker_name, active, is_custom")
                 .eq("team_id", tid);
               const ov = ((overrides as any) ?? []) as Array<{ broker_id: string; broker_name: string; active: boolean; is_custom: boolean }>;
