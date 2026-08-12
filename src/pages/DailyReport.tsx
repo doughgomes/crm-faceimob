@@ -81,8 +81,11 @@ export default function DailyReport() {
   const activeRoster = useMemo(() => roster.filter((b) => b.active !== false), [roster]);
 
   const reloadRoster = async (tid: string, rawPin: string) => {
-    const hash = await sha256(rawPin);
-    const { data, error } = await supabase.rpc("daily_roster_list" as any, { _team_id: tid, _pin_hash: hash });
+    const body: any = { team_id: tid };
+    if (rawPin) body.pin = rawPin;
+    if (directorParam) body.director_slug = directorParam;
+
+    const { data, error } = await supabase.functions.invoke("daily-team-info", { body });
     
     // Se falhar (ex: PIN inválido), tenta novamente sem o hash se for ADMIN logado
     if (error && isAdminView) {
@@ -108,8 +111,8 @@ export default function DailyReport() {
       }
     }
 
-    if (error) return null;
-    const list = ((data as any) ?? []) as Roster[];
+    if (error || (data as any)?.error) return null;
+    const list = ((data as any).roster ?? []) as Roster[];
     setRoster(list);
     setEntries((prev) => {
       const next: EntryState = { ...prev };
@@ -122,7 +125,7 @@ export default function DailyReport() {
   };
 
   const addBroker = async () => {
-    if (!resolvedTeamId || (!pin && !isAdminView) || !newBrokerName.trim()) return;
+    if (!resolvedTeamId || (!pin && !isAdminView && !directorParam) || !newBrokerName.trim()) return;
     setRosterBusy(true);
     
     try {
@@ -138,9 +141,17 @@ export default function DailyReport() {
         });
         if (error) throw error;
       } else {
-        const hash = await sha256(pin);
-        const { error } = await supabase.rpc("daily_roster_add" as any, { _team_id: resolvedTeamId, _pin_hash: hash, _broker_name: newBrokerName.trim() });
-        if (error) throw error;
+        // Usa a Edge Function que centraliza o bypass de diretor
+        const body: any = { 
+          action: "add_custom", 
+          broker_name: newBrokerName.trim() 
+        };
+        if (resolvedTeamId) body.team_id = resolvedTeamId;
+        if (directorParam) body.director_slug = directorParam;
+        if (pin) body.pin = pin;
+
+        const { data, error } = await supabase.functions.invoke("daily-team-info", { body });
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || error.message);
       }
       
       setNewBrokerName("");
@@ -155,7 +166,7 @@ export default function DailyReport() {
 
   const confirmRemoveBroker = async () => {
     const target = pendingRemove;
-    if (!target || !resolvedTeamId || (!pin && !isAdminView)) return;
+    if (!target || !resolvedTeamId || (!pin && !isAdminView && !directorParam)) return;
     setRosterBusy(true);
     try {
       if (isAdminView) {
@@ -170,9 +181,18 @@ export default function DailyReport() {
         }, { onConflict: 'team_id,broker_id' });
         if (error) throw error;
       } else {
-        const hash = await sha256(pin);
-        const { error } = await supabase.rpc("daily_roster_remove" as any, { _team_id: resolvedTeamId, _pin_hash: hash, _broker_id: target.broker_id });
-        if (error) throw error;
+        // Usa a Edge Function que centraliza o bypass de diretor
+        const body: any = { 
+          action: "set_active", 
+          broker_id: target.broker_id,
+          active: false
+        };
+        if (resolvedTeamId) body.team_id = resolvedTeamId;
+        if (directorParam) body.director_slug = directorParam;
+        if (pin) body.pin = pin;
+
+        const { data, error } = await supabase.functions.invoke("daily-team-info", { body });
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || error.message);
       }
       
       toast({ title: "Corretor desligado" });
