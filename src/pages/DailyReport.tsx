@@ -87,13 +87,13 @@ export default function DailyReport() {
 
     const { data, error } = await supabase.functions.invoke("daily-team-info", { body });
     
-    // Se falhar (ex: PIN inválido), tenta novamente sem o hash se for ADMIN logado
-    if (error && isAdminView) {
+    // Se falhar (ex: PIN inválido), tenta novamente via RLS se for ADMIN logado
+    if ((error || (data as any)?.error) && isAdminView) {
       const { data: adminData } = await supabase.rpc("get_team_roster" as any, { _team_id: tid });
       if (adminData) {
         const base = (adminData as any[]) as Roster[];
         const { data: overrides } = await supabase
-          .from("daily_team_roster" as any)
+          .from("daily_team_roster")
           .select("broker_id, broker_name, active, is_custom")
           .eq("team_id", tid);
         const ov = ((overrides as any) ?? []) as any[];
