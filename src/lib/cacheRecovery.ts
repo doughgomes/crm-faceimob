@@ -88,3 +88,24 @@ export function initCacheRecovery() {
     if (removedSw || removedCaches || versionChanged) hardReload();
   })();
 }
+
+/** Erros de chunk (assets antigos que não existem mais) → reset automático. */
+export function initChunkErrorRecovery() {
+  if (typeof window === "undefined") return;
+  const isChunkError = (msg: string) =>
+    /Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError|Loading chunk .* failed|error loading dynamically imported module/i.test(
+      msg,
+    );
+
+  const handle = (msg: string) => {
+    if (!isChunkError(msg)) return;
+    if (sessionStorage.getItem("faceimob-chunk-reset") === "1") return;
+    sessionStorage.setItem("faceimob-chunk-reset", "1");
+    void fullCacheReset();
+  };
+
+  window.addEventListener("error", (e) => handle(String((e as ErrorEvent).message || "")));
+  window.addEventListener("unhandledrejection", (e) =>
+    handle(String((e as PromiseRejectionEvent).reason?.message ?? (e as PromiseRejectionEvent).reason ?? "")),
+  );
+}
