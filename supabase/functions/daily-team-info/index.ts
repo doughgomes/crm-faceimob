@@ -323,9 +323,11 @@ Deno.serve(async (req) => {
           return json({ error: "Nome do corretor é obrigatório." }, 400);
         }
 
-        const newId =
-          broker_id?.trim() ||
-          `custom:${crypto.randomUUID()}`;
+        // broker_id da tabela é uuid — não usar prefixo textual
+        const rawId = broker_id?.trim() || "";
+        const newId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId)
+          ? rawId
+          : crypto.randomUUID();
 
         const { error: insErr } = await supabase
           .from("daily_team_roster")
