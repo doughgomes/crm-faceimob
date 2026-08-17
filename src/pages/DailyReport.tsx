@@ -151,7 +151,7 @@ export default function DailyReport() {
         if (pin) body.pin = pin;
 
         const { data, error } = await supabase.functions.invoke("daily-team-info", { body });
-        if (error || (data as any)?.error) throw new Error((data as any)?.error || error.message);
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Falha ao salvar");
       }
       
       setNewBrokerName("");
@@ -193,7 +193,7 @@ export default function DailyReport() {
         if (pin) body.pin = pin;
 
         const { data, error } = await supabase.functions.invoke("daily-team-info", { body });
-        if (error || (data as any)?.error) throw new Error((data as any)?.error || error.message);
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Falha ao salvar");
       }
       
       toast({ title: "Corretor desligado" });
