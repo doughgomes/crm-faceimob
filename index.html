@@ -36,6 +36,19 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Fallback de tela preta: se o app não montar, oferece recuperação de cache.
+      window.setTimeout(function () {
+        var root = document.getElementById("root");
+        if (root && root.childElementCount === 0) {
+          root.innerHTML =
+            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;background:#0F0E19;color:#fff;padding:24px;text-align:center">' +
+            '<div><h1 style="font-size:18px;margin:0 0 8px">Não foi possível carregar o CRM</h1>' +
+            '<p style="opacity:.7;font-size:14px;margin:0 0 16px">Seu navegador guardou uma versão antiga do sistema.</p>' +
+            '<a href="/?reset=1" style="display:inline-block;background:#1C264B;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-size:14px">Limpar cache e recarregar</a></div></div>';
+        }
+      }, 12000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
