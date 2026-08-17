@@ -55,7 +55,9 @@ export async function fullCacheReset() {
   } catch {
     /* noop */
   }
-  const url = new URL(window.location.origin + "/");
+  // Mantém a rota atual (links públicos de diretor/daily não podem cair na home).
+  const url = new URL(window.location.href);
+  url.searchParams.delete("reset");
   url.searchParams.set("_v", Date.now().toString(36));
   window.location.replace(url.toString());
 }
