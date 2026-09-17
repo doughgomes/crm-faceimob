@@ -13,7 +13,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   RadialBarChart, RadialBar, PolarAngleAxis, LineChart, Line, Legend,
 } from "recharts";
-import { isResultado, isProducao, isPerda, normalizeStatus, pickOpenMonth, compareMonth } from "@/lib/dealStatus";
+import { isResultado, isProducao, isPerda, normalizeStatus, compareMonth, currentMonthBase } from "@/lib/dealStatus";
 
 // ─── Static tables ──────────────────────────────────────────────────────────
 const DEVELOPERS = ["VASCO", "TENDA", "MRV", "MELNICK", "LYX", "MAB", "ABACO", "MCG", "MITRANA"];
@@ -111,7 +111,7 @@ export default function Dashboard() {
   }, [deals]);
 
   useEffect(() => {
-    if (month === null && months.length > 0) setMonth(pickOpenMonth(months, closedMonths));
+    if (month === null) setMonth(currentMonthBase());
   }, [month, months, closedMonths]);
 
   const activeMonth = month ?? "all";
