@@ -43,13 +43,13 @@
   .light {
     --background: 220 20% 97%;
     --foreground: 224 60% 15%;
-    --card: 0 0% 100%;
+    --card: 220 14% 98%;
     --card-foreground: 224 60% 15%;
-    --popover: 0 0% 100%;
+    --popover: 220 14% 98%;
     --popover-foreground: 224 60% 15%;
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 92%;
+    --secondary: 220 14% 96%;
     --secondary-foreground: 224 60% 15%;
     --muted: 220 14% 94%;
     --muted-foreground: 224 20% 46%;
@@ -57,14 +57,14 @@
     --accent-foreground: 0 0% 100%;
     --destructive: 4 78% 56%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 88%;
-    --input: 220 14% 88%;
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
     --ring: 217 91% 60%;
     --success: 145 63% 42%;
     --success-foreground: 0 0% 100%;
     --warning: 36 90% 51%;
     --warning-foreground: 0 0% 0%;
-    --sidebar-background: 0 0% 100%;
+    --sidebar-background: 220 14% 98%;
     --sidebar-foreground: 224 60% 15%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
