@@ -107,6 +107,10 @@ export default function Dashboard() {
   const months = useMemo(() => {
     const s = new Set<string>();
     deals.forEach((d) => d.month_base && s.add(d.month_base));
+    // Garante que o mes atual sempre apareca no seletor, mesmo sem nenhum negocio
+    // lancado ainda - senao o valor default (currentMonthBase) fica sem opcao
+    // correspondente no Select e o dashboard aparenta estar vazio/quebrado.
+    s.add(currentMonthBase());
     return Array.from(s).sort((a, b) => compareMonth(b, a));
   }, [deals]);
 
