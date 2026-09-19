@@ -1,16 +1,19 @@
 /**
- * Recuperação de cache persistente (tela preta).
+ * Recuperação de cache persistente (tela preta / acesso bloqueado).
  *
  * Alguns navegadores mantêm um Service Worker antigo registrado (de versões
  * anteriores do app / PWA) que continua servindo assets JS/CSS que não existem
  * mais no deploy atual — resultando em tela preta mesmo depois de "limpar o
- * cache" pelo navegador. Aqui removemos qualquer Service Worker e todos os
- * Cache Storage na inicialização, e forçamos um reload único quando algo foi
- * efetivamente removido ou quando a versão do build mudou.
+ * cache" pelo navegador. Além disso, dados antigos no localStorage (como o
+ * role demo) podem fazer o app carregar com um papel errado.
+ * Aqui removemos qualquer Service Worker, todos os Cache Storage e limpamos
+ * dados potencialmente corrompidos na inicialização, e forçamos um reload
+ * único quando algo foi efetivamente removido ou quando a versão do build mudou.
  */
 
 const VERSION_KEY = "faceimob-app-build";
 const RELOAD_GUARD = "faceimob-cache-reload";
+const ROLE_KEY = "faceimob-demo-role";
 
 function hardReload() {
   // Evita loop: só recarrega uma vez por sessão de aba.
@@ -45,6 +48,32 @@ async function clearCacheStorage(): Promise<boolean> {
   }
 }
 
+/** Limpa dados potencialmente conflitantes do localStorage. */
+function clearConflictingStorage(): boolean {
+  try {
+    const keysToCheck = [
+      ROLE_KEY,
+      "faceimob-session-v2",
+      "faceimob-auth-state",
+      "supabase-auth-token",
+    ];
+    let cleared = false;
+    keysToCheck.forEach((key) => {
+      const val = localStorage.getItem(key);
+      if (val) {
+        // Se parece com sessão antiga (base64 grande), limpa
+        if (val.length > 100 && val.includes(".")) {
+          localStorage.removeItem(key);
+          cleared = true;
+        }
+      }
+    });
+    return cleared;
+  } catch {
+    return false;
+  }
+}
+
 /** Limpeza total sob demanda: /?reset=1 ou botão de recuperação. */
 export async function fullCacheReset() {
   await unregisterServiceWorkers();
@@ -52,6 +81,14 @@ export async function fullCacheReset() {
   try {
     sessionStorage.removeItem(RELOAD_GUARD);
     localStorage.removeItem(VERSION_KEY);
+    // Limpa TUDO relacionado a sessão/role
+    localStorage.removeItem(ROLE_KEY);
+    localStorage.removeItem("faceimob-session-v2");
+    localStorage.removeItem("faceimob-auth-state");
+    // Tenta limpar tokens do supabase
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("sb-") || k.includes("auth-token"))
+      .forEach((k) => localStorage.removeItem(k));
   } catch {
     /* noop */
   }
@@ -76,6 +113,7 @@ export function initCacheRecovery() {
   void (async () => {
     const removedSw = isLocal ? false : await unregisterServiceWorkers();
     const removedCaches = isLocal ? false : await clearCacheStorage();
+    const removedConflicting = isLocal ? false : clearConflictingStorage();
 
     let versionChanged = false;
     try {
@@ -87,7 +125,7 @@ export function initCacheRecovery() {
       /* noop */
     }
 
-    if (removedSw || removedCaches || versionChanged) hardReload();
+    if (removedSw || removedCaches || removedConflicting || versionChanged) hardReload();
   })();
 }
 
