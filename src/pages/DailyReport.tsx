@@ -72,6 +72,8 @@ export default function DailyReport() {
   const [brokerMonth, setBrokerMonth] = useState<Record<string, Record<FieldKey, number> & { days_filled?: number }>>({});
   const [expandedBroker, setExpandedBroker] = useState<Record<string, boolean>>({});
   const [viewMonth, setViewMonth] = useState<Date>(startOfMonth(new Date()));
+  // Usuário logado no app: acessa e edita sem PIN
+  const [sessionOk, setSessionOk] = useState(false);
 
 
   const yesterday = subDays(new Date(), 1);
@@ -125,7 +127,7 @@ export default function DailyReport() {
   };
 
   const addBroker = async () => {
-    if (!resolvedTeamId || (!pin && !isAdminView && !directorParam) || !newBrokerName.trim()) return;
+    if (!resolvedTeamId || (!pin && !isAdminView && !directorParam && !sessionOk) || !newBrokerName.trim()) return;
     setRosterBusy(true);
     
     try {
@@ -166,7 +168,7 @@ export default function DailyReport() {
 
   const confirmRemoveBroker = async () => {
     const target = pendingRemove;
-    if (!target || !resolvedTeamId || (!pin && !isAdminView && !directorParam)) return;
+    if (!target || !resolvedTeamId || (!pin && !isAdminView && !directorParam && !sessionOk)) return;
     setRosterBusy(true);
     try {
       if (isAdminView) {
@@ -302,8 +304,9 @@ export default function DailyReport() {
         const tid = (data.info as any).team_id;
         if (tid) setResolvedTeamId(tid);
 
-        // Director link bypass: libera acesso sem PIN às equipes do escopo do diretor
-        if ((data as any)?.director_ok && tid) {
+        // Libera sem PIN: usuário logado no app OU link do diretor no escopo
+        if ((data as any)?.user_ok) setSessionOk(true);
+        if (((data as any)?.director_ok || (data as any)?.user_ok) && tid) {
           const list = ((data as any).roster ?? []) as Roster[];
           setRoster(list);
           const initial: EntryState = {};
@@ -445,25 +448,9 @@ export default function DailyReport() {
   };
 
   if (!identifier) return (
-    <div className="p-8 text-center text-rose-400 font-bold bg-[#0F0E19] min-h-screen flex flex-col items-center justify-center space-y-4">
-      <div>Try to fix these 2 Project monitoring findings:
-
-1. Directors can't submit daily checkpoints via director link
-Summary: Managers opening a team's daily checkpoint through a director link can view and fill the form, but pressing Save fails with "Não autorizado", so their numbers never get recorded and the team looks like it skipped the day.
-Severity: high
-Source: qa
-Affected paths: supabase/functions/submit-daily-report/index.ts
-Code range: 848bf5489082c9d9008b6254f2eafa37a35f8448..d619e2337e24f088779c0e03982cab52ad07ee0f
-Evidence: In supabase/functions/submit-daily-report/index.ts the slugify() body was truncated to only `s.normalize("NFD").replace(/[\u0300-\u036f]/g, "")` — the `.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")` chain was removed. directorSlugMatches() then compares the request's director_slug (produced by the frontend's full slugify, e.g. "joao-silva") against slugify(broker.name) which now returns e.g. "Joao Silva" / "Joao". They never match for any multi-word or mixed-case director name, so the `if (!authorized) return 403` branch fires. The director-link path in DailyReport.tsx submits with `pin: undefined` and `director_slug: directorParam`, so the PIN branch is skipped and the whole submission is rejected. daily-team-info and director-weekly still use the full slugify, so the view/roster step works — masking the regression until the user clicks Save.
-
-2. Director link can view dailies but can't submit them
-Summary: When a director opens a team's daily from the "Preencher meu daily" links using a short-name link (e.g. their first name), they can load the form and enter all the numbers, but hitting "Enviar" fails with "Não autorizado" and nothing is saved — wasting the manager/director's time.
-Severity: high
-Source: qa
-Affected paths: supabase/functions/submit-daily-report/index.ts, supabase/functions/daily-team-info/index.ts, src/pages/DailyReport.tsx, src/pages/PublicDirectorCheckpoint.tsx
-Code range: 0b9886104a070908f75c24df01f477a767398cf7..5608a650ba4cd2c831248caed5b7df7dd52a431c
-Evidence: The three edge functions disagree on how they resolve the `director_slug`. `daily-team-info/index.ts` and `director-weekly/index.ts` both use a new `directorSlugMatches(name, requested)` helper that accepts either the full-name slug OR the first-name slug of the director. However, `submit-daily-report/index.ts` (line 69) still uses the strict check `slugify(b.name || "") === body.director_slug`, matching only the full-name slug. In `src/pages/PublicDirectorCheckpoint.tsx` the "Preencher meu daily" links pass `?director=slug` where slug comes straight from the URL `useParams`, and in `src/pages/DailyReport.tsx` that `directorParam` is forwarded verbatim to both `daily-team-info` (used to unlock the form via `director_ok`) and `submit-daily-report`. So any URL slug that resolves the director by first-name (e.g. `/diretor/lucas` when the director is "Lucas Silva") passes the initial load and roster fetch but is rejected at submit time, returning {"{ error: \"Não autorizado (PIN inválido ou link do diretor inválido).\" }"} and discarding the filled entries.</div>
-
+    <div className="p-8 text-center bg-[#0F0E19] min-h-screen flex flex-col items-center justify-center space-y-3">
+      <p className="text-rose-400 font-bold">Equipe não informada no link.</p>
+      <p className="text-xs text-muted-foreground">Abra o checkpoint pela lista de equipes do app.</p>
     </div>
   );
 
