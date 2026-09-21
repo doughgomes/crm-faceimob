@@ -41,20 +41,6 @@ export default function AppLayout() {
     })();
   }, [user?.id, user?.email]);
 
-  useEffect(() => {
-    const justLogged = sessionStorage.getItem("faceimob-just-logged");
-    if (justLogged === "true") {
-      setShowMotivation(true);
-      sessionStorage.removeItem("faceimob-just-logged");
-    }
-  }, []);
-
-  // Header ranking: mirrors the Pipeline top ranking, scoped by role.
-  // Broker sees only their own card entry; others see top 3 in scope.
-  const headerScores = myBroker && scoped.length === 1
-    ? [{ ...scoped[0], rank: allScores.findIndex(s => s.broker.id === myBroker.id) + 1 }]
-    : scoped.slice(0, 3).map((s, i) => ({ ...s, rank: i + 1 }));
-
   return (
     <SidebarProvider style={{ "--sidebar-width": "13rem", "--sidebar-width-icon": "3.25rem" } as React.CSSProperties}>
       <div className="min-h-screen flex w-full">
