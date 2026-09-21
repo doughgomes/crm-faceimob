@@ -17,12 +17,10 @@ const pageTitles: Record<string, string> = {
 };
 
 export default function AppLayout() {
-  const [showMotivation, setShowMotivation] = useState(false);
   const [me, setMe] = useState<{ name: string; avatar_url: string | null } | null>(null);
   const location = useLocation();
   const pageTitle = pageTitles[location.pathname] || "Faceimob";
-  const { user } = useAuth();
-  const { scoped, myBroker, allScores } = useGameRanking();
+  const { user, role } = useAuth();
 
   useEffect(() => {
     if (!user?.id) { setMe(null); return; }
