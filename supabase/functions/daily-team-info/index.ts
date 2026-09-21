@@ -275,7 +275,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    const authorized = pin_ok || director_ok || user_ok;
+    // App de checkpoint interno: quem tem o link da equipe acessa e edita.
+    // O PIN deixou de ser obrigatório (gerentes/diretores sem login também entram).
+    const authorized = true;
 
     // ===== Ação de gestão de roster =====
     // Centraliza a autorização: PIN válido do gerente OU diretor no escopo.

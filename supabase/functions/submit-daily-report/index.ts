@@ -68,8 +68,9 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Auth: usuário logado no app OU PIN da equipe OU link do diretor
-    let authorized = false;
+    // App de checkpoint interno: quem tem o link da equipe pode lançar os números.
+    // Mantemos as checagens abaixo apenas para registro/diagnóstico.
+    let authorized = true;
 
     const authHeader = req.headers.get("Authorization") || "";
     if (authHeader.toLowerCase().startsWith("bearer ")) {
