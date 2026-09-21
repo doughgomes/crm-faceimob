@@ -12,18 +12,12 @@ import { Trophy } from "lucide-react";
 import { useGameRanking } from "@/hooks/useGameRanking";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Pipeline de Vendas",
-  "/pipeline": "Pipeline",
-  "/cca": "Pipeline CCA",
-  "/leads": "Leads",
-  "/resultados": "Resultados",
-  "/marketing": "Marketing",
+  "/checkpoint": "Relatório Geral de Checkpoints",
+  "/meus-checkpoints": "Preencher Checkpoint",
   "/equipes": "Equipes",
-  "/links": "Links",
-  "/data": "Dados",
-  "/settings": "Configurações",
   "/admin/permissions": "Permissões",
-  "/admin/developers": "Construtoras & CCA",
+  "/admin/daily-teams": "Links & PINs",
+  "/admin/allowed-ips": "IPs autorizados",
 };
 
 export default function AppLayout() {

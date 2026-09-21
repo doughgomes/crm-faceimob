@@ -137,12 +137,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('faceimob-demo-role', newRole);
   }, []);
 
+  // Resolve o papel real do usuário (tabela de acessos + cadastro de pessoas)
+  const resolveRole = useCallback(async (u: User) => {
+    try {
+      const { data: adminRow } = await supabase
+        .from('user_roles').select('role').eq('user_id', u.id).eq('role', 'admin').maybeSingle();
+      if (adminRow) {
+        const saved = localStorage.getItem('faceimob-demo-role') as AppRole | null;
+        const effective = saved && demoPermissions[saved] ? saved : 'admin';
+        setRole(effective);
+        setPermissions(demoPermissions[effective]);
+        setStagePermissions(demoStagePermissions[effective]);
+        return;
+      }
+
+      let brokerRole: string | null = null;
+      const { data: byId } = await supabase.from('brokers').select('role').eq('user_id', u.id).maybeSingle();
+      if (byId?.role) brokerRole = byId.role;
+      if (!brokerRole && u.email) {
+        const { data: byEmail } = await supabase
+          .from('brokers').select('role')
+          .or(`login_email.eq.${u.email},email.eq.${u.email}`)
+          .maybeSingle();
+        if (byEmail?.role) brokerRole = byEmail.role;
+      }
+
+      const r = (brokerRole || 'broker') as AppRole;
+      const effective = demoPermissions[r] ? r : 'broker';
+      setRole(effective);
+      setPermissions(demoPermissions[effective]);
+      setStagePermissions(demoStagePermissions[effective]);
+    } catch (_e) {
+      // mantém o papel atual em caso de falha de rede
+    }
+  }, []);
+
   useEffect(() => {
     // Set up auth listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) setTimeout(() => { resolveRole(session.user); }, 0);
     });
 
     // Then check existing session
@@ -150,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) resolveRole(session.user);
     });
 
     // Load demo role from localStorage
