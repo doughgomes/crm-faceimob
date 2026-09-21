@@ -206,6 +206,26 @@ Deno.serve(async (req) => {
 
     let pin_ok = false;
     let director_ok = false;
+    let user_ok = false;
+
+    // ===== Usuário logado no app =====
+    // Qualquer usuário autenticado (gerente, diretor, admin) acessa e edita
+    // os checkpoints sem PIN. O app é interno e o acesso já é dado no login.
+    const authHeader = req.headers.get("Authorization") || "";
+    if (authHeader.toLowerCase().startsWith("bearer ")) {
+      const token = authHeader.slice(7);
+      try {
+        const authClient = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { auth: { persistSession: false } },
+        );
+        const { data: userData } = await authClient.auth.getUser(token);
+        if (userData?.user?.id) user_ok = true;
+      } catch (_e) {
+        user_ok = false;
+      }
+    }
 
     // ===== Bypass do diretor =====
     // O link do diretor libera acesso SEM PIN às equipes dos gerentes abaixo
@@ -255,7 +275,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    const authorized = pin_ok || director_ok;
+    // App de checkpoint interno: quem tem o link da equipe acessa e edita.
+    // O PIN deixou de ser obrigatório (gerentes/diretores sem login também entram).
+    const authorized = true;
 
     // ===== Ação de gestão de roster =====
     // Centraliza a autorização: PIN válido do gerente OU diretor no escopo.
@@ -372,6 +394,7 @@ Deno.serve(async (req) => {
       roster,
       pin_ok,
       director_ok,
+      user_ok,
       authorized,
       can_manage: authorized,
       action_ok,

@@ -18,32 +18,20 @@ import { useTheme } from "@/hooks/useTheme";
 import { useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
+// App focado em Checkpoint: preenchimento + relatório geral.
 const mainNav = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ['admin', 'partner', 'director', 'manager', 'broker'] },
-  { title: "Pipeline", url: "/pipeline", icon: GitBranch, roles: ['admin', 'partner', 'director', 'manager', 'broker'] },
-  { title: "CCA Pipeline", url: "/cca", icon: CreditCard, roles: ['admin', 'cca', 'partner'] },
-  { title: "Marketing", url: "/marketing", icon: Megaphone, roles: ['admin', 'partner', 'director', 'manager'] },
-  { title: "Equipes", url: "/equipes", icon: Users, roles: ['admin', 'partner', 'director', 'manager', 'broker', 'cca'] },
-  { title: "Links", url: "/links", icon: Link2, roles: ['admin', 'partner', 'director', 'manager', 'broker'] },
-  { title: "Gamificação", url: "/gamification", icon: Trophy, roles: ['admin', 'partner', 'director', 'manager', 'broker'] },
-  { title: "Resultados", url: "/resultados", icon: TrendingUp, roles: ['admin', 'partner', 'director', 'manager'] },
-  { title: "Checkpoint", url: "/checkpoint", icon: Target, roles: ['admin', 'partner', 'director', 'manager'] },
-  { title: "Check-in", url: "/checkin", icon: LogIn, roles: ['admin', 'partner', 'director', 'manager', 'broker'] },
-  { title: "SDR IA", url: "/sdr", icon: Bot, roles: ['admin', 'partner', 'director', 'manager'] },
+  { title: "Preencher Checkpoint", url: "/meus-checkpoints", icon: Target, roles: ['admin', 'partner', 'director', 'manager', 'broker', 'cca'] },
+  { title: "Relatório Geral", url: "/checkpoint", icon: TrendingUp, roles: ['admin', 'partner', 'director', 'manager', 'broker', 'cca'] },
 ];
 
 const adminNav = [
+  { title: "Equipes", url: "/equipes", icon: Users },
+  { title: "Links & PINs", url: "/admin/daily-teams", icon: KeyRound },
   { title: "Permissões", url: "/admin/permissions", icon: Shield },
-  { title: "Construtoras", url: "/admin/developers", icon: Building2 },
-  { title: "Diário — Links", url: "/admin/daily-teams", icon: KeyRound },
   { title: "IPs autorizados", url: "/admin/allowed-ips", icon: Globe },
-  { title: "Automação Leads", url: "/admin/lead-automation", icon: Zap },
 ];
 
-const systemNav = [
-  { title: "Dados", url: "/data", icon: Database },
-  { title: "Configurações", url: "/settings", icon: Settings },
-];
+const systemNav: { title: string; url: string; icon: any }[] = [];
 
 export function AppSidebar() {
   const { state, setOpen } = useSidebar();
@@ -124,6 +112,7 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
+        {systemNav.length > 0 && (
         <SidebarGroup>
           <SidebarGroupLabel>Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -141,6 +130,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

@@ -39,7 +39,7 @@ export default function Checkpoint() {
     setLoading(true);
     const [t, b, tg] = await Promise.all([
       supabase.from("teams").select("id,name,display_name,manager_id"),
-      supabase.from("brokers").select("id,name,manager_id,director_id,user_id").eq("active", true),
+      supabase.from("brokers").select("id,name,manager_id,director_id,user_id,login_email,email").eq("active", true),
       supabase.from("checkpoint_targets").select("team_id,analise_enviada_pct,aprovada_pct,venda_pct"),
     ]);
     setTeams((t.data as any) || []);
@@ -74,7 +74,15 @@ export default function Checkpoint() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [weekStart.getTime()]);
 
-  const myBroker = useMemo(() => brokers.find(b => b.user_id === user?.id) || null, [brokers, user]);
+  const myBroker = useMemo(() => {
+    const email = (user?.email || "").toLowerCase();
+    return (
+      brokers.find(b => b.user_id === user?.id) ||
+      (email ? brokers.find(b => ((b as any).login_email || "").toLowerCase() === email) : null) ||
+      (email ? brokers.find(b => ((b as any).email || "").toLowerCase() === email) : null) ||
+      null
+    );
+  }, [brokers, user]);
 
   const visibleTeams = useMemo(() => {
     if (role === "admin") return teams;
