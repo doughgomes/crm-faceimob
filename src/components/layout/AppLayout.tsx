@@ -2,14 +2,10 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Outlet, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { MotivationalPopup } from "@/components/MotivationalPopup";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
-import NewLeadNotifier from "@/components/NewLeadNotifier";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy } from "lucide-react";
-import { useGameRanking } from "@/hooks/useGameRanking";
 
 const pageTitles: Record<string, string> = {
   "/checkpoint": "Relatório Geral de Checkpoints",
