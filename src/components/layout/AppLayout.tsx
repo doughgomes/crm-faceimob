@@ -72,8 +72,6 @@ export default function AppLayout() {
           </main>
         </div>
       </div>
-      {showMotivation && <MotivationalPopup />}
-      <NewLeadNotifier />
     </SidebarProvider>
   );
 }
