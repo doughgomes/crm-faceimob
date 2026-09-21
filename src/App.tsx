@@ -23,6 +23,7 @@ import AdminDevelopers from "@/pages/AdminDevelopers";
 import Gamification from "@/pages/Gamification";
 import DailyReport from "@/pages/DailyReport";
 import Checkpoint from "@/pages/Checkpoint";
+import MeusCheckpoints from "@/pages/MeusCheckpoints";
 import AdminDailyTeams from "@/pages/AdminDailyTeams";
 import Checkin from "@/pages/Checkin";
 import AdminAllowedIps from "@/pages/AdminAllowedIps";
