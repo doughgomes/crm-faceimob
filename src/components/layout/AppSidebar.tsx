@@ -112,6 +112,7 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
+        {systemNav.length > 0 && (
         <SidebarGroup>
           <SidebarGroupLabel>Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -129,6 +130,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

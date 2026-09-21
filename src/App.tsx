@@ -58,32 +58,36 @@ const App = () => (
             <Route path="/daily/:teamId/:slug" element={<DailyReport />} />
             <Route path="/daily/:slug" element={<DailyReport />} />
             <Route path="/diretor/:slug" element={<PublicDirectorCheckpoint />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/checkpoint" replace />} />
             <Route element={<RequireAuth />}>
-              <Route path="/dashboard" element={<DashboardSwitcher />} />
-              <Route path="/pipeline" element={<Pipeline />} />
-              <Route path="/cca" element={<CcaPipeline />} />
-              <Route path="/leads" element={<Navigate to="/pipeline" replace />} />
-              <Route path="/resultados" element={<Resultados />} />
-              <Route path="/marketing" element={<Marketing />} />
+              {/* App focado em Checkpoint */}
+              <Route path="/checkpoint" element={<Checkpoint />} />
+              <Route path="/meus-checkpoints" element={<MeusCheckpoints />} />
               <Route path="/equipes" element={<Equipes />} />
+              <Route path="/admin/permissions" element={<AdminPermissions />} />
+              <Route path="/admin/daily-teams" element={<AdminDailyTeams />} />
+              <Route path="/admin/allowed-ips" element={<AdminAllowedIps />} />
+
+              {/* Rotas antigas — redirecionam para o checkpoint */}
+              <Route path="/dashboard" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/pipeline" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/cca" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/leads" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/resultados" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/marketing" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/links" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/data" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/settings" element={<Navigate to="/checkpoint" replace />} />
               <Route path="/team" element={<Navigate to="/equipes" replace />} />
               <Route path="/profile" element={<Navigate to="/equipes" replace />} />
-              <Route path="/links" element={<Links />} />
-              <Route path="/data" element={<DataManagement />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/admin/permissions" element={<AdminPermissions />} />
               <Route path="/admin/teams" element={<Navigate to="/equipes" replace />} />
-              <Route path="/admin/developers" element={<AdminDevelopers />} />
-              <Route path="/admin/daily-teams" element={<AdminDailyTeams />} />
-              <Route path="/checkpoint" element={<Checkpoint />} />
-              <Route path="/checkin" element={<Checkin />} />
-              <Route path="/admin/allowed-ips" element={<AdminAllowedIps />} />
-              <Route path="/admin/meta-ads" element={<MetaAdsSetup />} />
-              <Route path="/admin/lead-automation" element={<AdminLeadAutomation />} />
+              <Route path="/admin/developers" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/admin/meta-ads" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/admin/lead-automation" element={<Navigate to="/checkpoint" replace />} />
               <Route path="/admin/daily-bi" element={<Navigate to="/checkpoint" replace />} />
-              <Route path="/gamification" element={<Gamification />} />
-              <Route path="/sdr" element={<SdrModule />} />
+              <Route path="/checkin" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/gamification" element={<Navigate to="/checkpoint" replace />} />
+              <Route path="/sdr" element={<Navigate to="/checkpoint" replace />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
