@@ -304,9 +304,9 @@ export default function DailyReport() {
         const tid = (data.info as any).team_id;
         if (tid) setResolvedTeamId(tid);
 
-        // Libera sem PIN: usuário logado no app OU link do diretor no escopo
-        if ((data as any)?.user_ok) setSessionOk(true);
-        if (((data as any)?.director_ok || (data as any)?.user_ok) && tid) {
+        // Acesso liberado sem PIN: quem abre o link da equipe já pode preencher.
+        if ((data as any)?.authorized) setSessionOk(true);
+        if ((data as any)?.authorized && tid) {
           const list = ((data as any).roster ?? []) as Roster[];
           setRoster(list);
           const initial: EntryState = {};
