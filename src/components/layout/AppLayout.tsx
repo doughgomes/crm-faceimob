@@ -70,23 +70,8 @@ export default function AppLayout() {
             <SidebarTrigger className="mr-3 md:hidden" />
             <h1 className="text-[13px] font-semibold tracking-tight text-foreground mr-6">{pageTitle}</h1>
 
-            <div className="hidden md:flex items-center gap-2 mx-auto overflow-hidden">
-              {headerScores.map((s, i) => (
-                <div
-                  key={s.broker.id}
-                  style={{ animationDelay: `${i * 80}ms` }}
-                  className="animate-fade-in flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/15 bg-primary/[0.04] backdrop-blur-md interactive ease-premium hover:border-primary/40 hover:bg-primary/10 hover:-translate-y-0.5"
-                >
-                  <span className="text-[11px] font-semibold text-primary tabular-nums">{s.rank}º</span>
-                  <Trophy className={s.rank === 1 ? "h-3 w-3 text-amber-400" : s.rank === 2 ? "h-3 w-3 text-slate-300" : "h-3 w-3 text-orange-500"} />
-                  <span className="text-xs font-medium truncate max-w-[120px]">{s.broker.name}</span>
-                  <span className="text-[10px] text-muted-foreground font-mono tabular-nums">{s.points} pts</span>
-                </div>
-              ))}
-            </div>
-
             <div className="flex items-center gap-3 ml-auto">
-              <RoleSwitcher />
+              {role === "admin" && <RoleSwitcher />}
               <span className="text-xs text-muted-foreground hidden sm:block tracking-tight">{me?.name || user?.email || "Usuário"}</span>
               {me?.avatar_url ? (
                 <img src={me.avatar_url} alt="User" className="w-8 h-8 rounded-full object-cover border border-primary/30 ring-2 ring-background shadow-elevate interactive hover:scale-105" />
